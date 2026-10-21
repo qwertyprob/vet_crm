@@ -111,3 +111,5 @@ end
 gem "image_processing", "~> 2.0"
 
 gem "devise", "~> 5.0"
+
+gem "tailwindcss-rails", "~> 4.6"
