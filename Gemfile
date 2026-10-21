@@ -28,8 +28,8 @@ gem "active_model_serializers", "~> 0.10.16"
 # Security / Auth
 # =========================
 gem "bcrypt", "~> 3.1.7"   # password hashing
-gem "jwt"                  # JWT tokens
 gem "pundit"               # authorization policies
+gem "devise", "~> 5.0"
 
 # =========================
 # OTP / MFA
@@ -91,7 +91,6 @@ group :development, :test do
   gem "ruby-lsp-rspec", require: false
   gem "factory_bot_rails"
   gem "faker"
-
 end
 
 # =========================
@@ -108,3 +107,7 @@ end
 group :test do
   gem "shoulda-matchers"
 end
+
+gem "image_processing", "~> 2.0"
+
+gem "devise", "~> 5.0"
