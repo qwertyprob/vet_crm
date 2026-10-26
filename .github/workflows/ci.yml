@@ -107,11 +107,13 @@ jobs:
             echo "dev has nothing new for main, skipping"
             exit 0
           fi
+          body="$(git log --format='- %s' origin/main..HEAD)"
           existing="$(gh pr list --base main --head dev --state open --json number -q '.[0].number')"
           if [ -n "${existing}" ]; then
-            echo "PR #${existing} already open, skipping"
+            gh pr edit "${existing}" --body "${body}"
+            echo "PR #${existing} already open, body updated"
             exit 0
           fi
           gh pr create --base main --head dev \
             --title "Release: dev -> main" \
-            --body "Automated PR: dev passed CI and is ahead of main."
+            --body "${body}"
