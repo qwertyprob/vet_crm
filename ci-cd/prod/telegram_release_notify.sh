@@ -1,14 +1,9 @@
 #!/bin/sh
 set -eu
 
-# Runs only on push to main (i.e. after an MR is merged).
-if [ "${CI_PIPELINE_SOURCE:-}" != "push" ]; then
-  echo "Skip: not a push pipeline"
-  exit 0
-fi
-
-if [ "${CI_COMMIT_BRANCH:-}" != "main" ]; then
-  echo "Skip: branch is not main"
+# Runs only for release tags (v*). The version is the tag name without the "v".
+if [ -z "${CI_COMMIT_TAG:-}" ]; then
+  echo "Skip: not a tag pipeline"
   exit 0
 fi
 
@@ -17,15 +12,9 @@ if [ -z "${TELEGRAM_BOT_TOKEN:-}" ] || [ -z "${TELEGRAM_CHAT_ID:-}" ]; then
   exit 0
 fi
 
-echo "New release merged to main"
+echo "New release ${CI_COMMIT_TAG}"
 
-version=""
-if [ -f "config/version.rb" ]; then
-  version="$(grep -m1 'VETCRM_VERSION' config/version.rb | sed -E 's/.*"([^"]+)".*/\1/' || true)"
-fi
-if [ -z "${version}" ]; then
-  version="unknown"
-fi
+version="${CI_COMMIT_TAG#v}"
 
 notes=""
 if [ -f "CHANGELOG.md" ]; then
