@@ -99,3 +99,55 @@ jobs:
           fi
           # Title matches GitHub's default merge message, with the real PR number.
           gh pr edit "${number}" --title "Merge pull request #${number} from ${GITHUB_REPOSITORY_OWNER}/dev"
+
+  release:
+    needs: deploy-prod
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: env
+    permissions:
+      contents: write
+      pull-requests: read
+    concurrency:
+      group: release
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tag next version
+        id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          last="$(git tag -l 'v*' --sort=-v:refname | head -1)"
+          last="${last:-v0.0.0}"
+          version="${last#v}"
+          major="${version%%.*}"
+          rest="${version#*.}"
+          minor="${rest%%.*}"
+          patch="${rest#*.}"
+
+          # Label on the merged PR decides the bump; patch is the default.
+          labels="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls" -q '.[0].labels[].name' 2>/dev/null | tr '\n' ' ' || true)"
+          case " ${labels}" in
+            *" major "*) major=$((major + 1)); minor=0; patch=0 ;;
+            *" minor "*) minor=$((minor + 1)); patch=0 ;;
+            *) patch=$((patch + 1)) ;;
+          esac
+
+          next="v${major}.${minor}.${patch}"
+          git tag "${next}"
+          git push origin "${next}"
+          echo "tag=${next}" >> "$GITHUB_OUTPUT"
+
+      - name: Send Telegram release notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          CI_COMMIT_TAG: ${{ steps.version.outputs.tag }}
+          CI_COMMIT_SHA: ${{ github.sha }}
+          CI_PROJECT_PATH: ${{ github.repository }}
+        run: sh ./ci-cd/prod/telegram_release_notify.sh
