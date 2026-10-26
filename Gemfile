@@ -25,18 +25,6 @@ gem "stimulus-rails"
 gem "active_model_serializers", "~> 0.10.16"
 
 # =========================
-# Security / Auth
-# =========================
-gem "bcrypt", "~> 3.1.7"   # password hashing
-gem "pundit"               # authorization policies
-gem "devise", "~> 5.0"
-
-# =========================
-# OTP / MFA
-# =========================
-gem "rotp"
-
-# =========================
 # CORS
 # =========================
 gem "rack-cors", "~> 2.0"
@@ -109,7 +97,5 @@ group :test do
 end
 
 gem "image_processing", "~> 2.0"
-
-gem "devise", "~> 5.0"
 
 gem "tailwindcss-rails", "~> 4.6"
