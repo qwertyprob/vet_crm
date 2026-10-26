@@ -18,6 +18,7 @@ gem "thruster", require: false
 gem "tzinfo-data", platforms: %i[windows jruby]
 gem "image_processing", "~> 2.0"
 gem "tailwindcss-rails", "~> 4.6"
+gem "devise"
 
 group :development, :test do
   gem "dotenv-rails", "~> 3.2"
@@ -39,3 +40,9 @@ group :test do
   gem "faker"
   gem "shoulda-matchers"
 end
+
+gem "ruby_ui", "~> 1.6", group: :development, require: false
+
+gem "phlex-rails", "~> 2.4"
+
+gem "tailwind_merge", "~> 1.5"
