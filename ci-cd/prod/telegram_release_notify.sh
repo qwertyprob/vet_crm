@@ -42,7 +42,11 @@ if [ -z "${notes}" ]; then
 fi
 
 # Drop commit trailers (e.g. Co-Authored-By) and leading blank lines.
-notes="$(printf '%s\n' "${notes}" | grep -v '^Co-Authored-By:' | sed '/./,$!d' || true)"
+# Telegram gets plain text (no parse_mode), so turn Markdown into plain-text equivalents.
+notes="$(printf '%s\n' "${notes}" \
+  | grep -v '^Co-Authored-By:' \
+  | sed -E -e 's/^#+ +(.*)$/\1:/' -e 's/^- /• /' -e 's/`//g' \
+  | sed '/./,$!d' || true)"
 
 if [ "$(printf '%s\n' "${notes}" | wc -l)" -gt 20 ]; then
   notes="$(printf '%s\n' "${notes}" | head -20)
