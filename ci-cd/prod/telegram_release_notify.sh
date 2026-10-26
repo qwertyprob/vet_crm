@@ -29,7 +29,7 @@ fi
 
 notes=""
 if [ -f "CHANGELOG.md" ]; then
-  notes="$(awk -v v="${version}" 'index($0, "## [" v "]") == 1 {found=1; next} /^## /{found=0} found' CHANGELOG.md | sed '/./,$!d' | head -20 || true)"
+  notes="$(awk -v v="${version}" 'index($0, "## [" v "]") == 1 {found=1; next} /^## /{found=0} found' CHANGELOG.md | sed '/./,$!d' || true)"
 fi
 
 if [ -z "${notes}" ]; then
@@ -41,7 +41,13 @@ if [ -z "${notes}" ]; then
   fi
 fi
 
-notes="$(printf '%s\n' "${notes}" | head -20)"
+# Drop commit trailers (e.g. Co-Authored-By) and leading blank lines.
+notes="$(printf '%s\n' "${notes}" | grep -v '^Co-Authored-By:' | sed '/./,$!d' || true)"
+
+if [ "$(printf '%s\n' "${notes}" | wc -l)" -gt 20 ]; then
+  notes="$(printf '%s\n' "${notes}" | head -20)
+…"
+fi
 
 repo_url="${REPO_URL:-https://github.com/qwertyprob/vet_crm}"
 commit_sha="${CI_COMMIT_SHA:-}"

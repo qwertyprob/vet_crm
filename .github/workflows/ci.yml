@@ -85,3 +85,33 @@ jobs:
           CI_COMMIT_SHA: ${{ github.sha }}
           CI_PROJECT_PATH: ${{ github.repository }}
         run: sh ./ci-cd/prod/telegram_release_notify.sh
+
+  open-release-pr:
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Open PR dev -> main if dev is ahead
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git fetch origin main
+          if [ -z "$(git log --oneline origin/main..HEAD)" ]; then
+            echo "dev has nothing new for main, skipping"
+            exit 0
+          fi
+          existing="$(gh pr list --base main --head dev --state open --json number -q '.[0].number')"
+          if [ -n "${existing}" ]; then
+            echo "PR #${existing} already open, skipping"
+            exit 0
+          fi
+          gh pr create --base main --head dev \
+            --title "Release: dev -> main" \
+            --body "Automated PR: dev passed CI and is ahead of main."
