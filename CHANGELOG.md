@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-10-28
+
+### Added
+- GitHub Release is created for every release tag, with the notes from this file.
+
+### Changed
+- Release notes come only from the `CHANGELOG.md` section for the version. Commit messages are never used.
+- The release job stops before tagging if `CHANGELOG.md` has no section for the next version.
+
+## [0.0.3] - 2026-10-28
+
+### Added
+- Automatic release on every merge to `main`: next patch tag, `minor` or `major` bump from a PR label.
+- Telegram release notification is sent by the same automatic release job.
+
 ## [0.0.2] - 2026-10-28
 
 ### Added
