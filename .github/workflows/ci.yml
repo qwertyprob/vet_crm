@@ -137,10 +137,26 @@ jobs:
             *) patch=$((patch + 1)) ;;
           esac
 
-          next="v${major}.${minor}.${patch}"
-          git tag "${next}"
-          git push origin "${next}"
-          echo "tag=${next}" >> "$GITHUB_OUTPUT"
+          tag="v${major}.${minor}.${patch}"
+
+          # Release notes come only from CHANGELOG.md. No section means no release.
+          awk -v v="${tag#v}" 'index($0, "## [" v "]") == 1 {found=1; next} /^## /{found=0} found' CHANGELOG.md \
+            | sed '/./,$!d' > "${RUNNER_TEMP}/notes.md"
+          if [ ! -s "${RUNNER_TEMP}/notes.md" ]; then
+            echo "::error::CHANGELOG.md has no section for ${tag}. Add '## [${tag#v}] - <date>' and merge again."
+            exit 1
+          fi
+
+          echo "tag=${tag}" >> "$GITHUB_OUTPUT"
+
+      - name: Create tag and GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin "${TAG}"
+          gh release create "${TAG}" --title "${TAG}" --notes-file "${RUNNER_TEMP}/notes.md"
 
       - name: Send Telegram release notification
         env:

@@ -21,13 +21,10 @@ if [ -f "CHANGELOG.md" ]; then
   notes="$(awk -v v="${version}" 'index($0, "## [" v "]") == 1 {found=1; next} /^## /{found=0} found' CHANGELOG.md | sed '/./,$!d' || true)"
 fi
 
+# Notes come only from CHANGELOG.md; commit messages are never used.
 if [ -z "${notes}" ]; then
-  # Fallback to commit from the merged MR branch instead of merge commit message.
-  if git rev-parse -q --verify HEAD^2 >/dev/null 2>&1; then
-    notes="$(git log -1 --pretty=format:'%s%n%n%b' HEAD^2 || true)"
-  else
-    notes="$(git log -1 --pretty=format:'%s%n%n%b' HEAD || true)"
-  fi
+  echo "Error: CHANGELOG.md has no section for ${version}" >&2
+  exit 1
 fi
 
 # Drop commit trailers (e.g. Co-Authored-By) and leading blank lines.
