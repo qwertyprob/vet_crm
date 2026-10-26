@@ -36,9 +36,11 @@ RUN if [ "$RAILS_ENV" = "production" ]; then export BUNDLE_WITHOUT=development; 
 
 COPY . .
 
-RUN bundle exec bootsnap precompile -j 1 app/ lib/
+RUN if [ "$RAILS_ENV" = "production" ]; then export BUNDLE_WITHOUT=development; fi && \
+    bundle exec bootsnap precompile -j 1 app/ lib/
 
 RUN if [ "$RAILS_ENV" = "production" ]; then \
+      export BUNDLE_WITHOUT=development && \
       SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile; \
     fi
 
