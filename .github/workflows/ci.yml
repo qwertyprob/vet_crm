@@ -73,6 +73,25 @@ jobs:
           RAILS_MASTER_KEY: ${{ secrets.RAILS_MASTER_KEY }}
         run: |
           docker compose -f ./ci-cd/prod/docker-compose.yml up -d
-      
+
       - name: Cleanup images
         run: docker image prune -f
+
+  notify-release:
+    needs: deploy-prod
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: env
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Send Telegram release notification
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID: ${{ secrets.TELEGRAM_THREAD_ID }}
+          CI_PIPELINE_SOURCE: push
+          CI_COMMIT_BRANCH: ${{ github.ref_name }}
+          CI_COMMIT_SHA: ${{ github.sha }}
+          CI_PROJECT_PATH: ${{ github.repository }}
+        run: sh ./ci-cd/prod/telegram_release_notify.sh
