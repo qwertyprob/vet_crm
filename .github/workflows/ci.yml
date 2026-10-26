@@ -27,8 +27,30 @@ jobs:
         if: always()
         run: docker compose -f ./ci-cd/test/docker-compose.yml down -v
   
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.4"
+          bundler-cache: true
+      - name: RuboCop
+        run: bundle exec rubocop
+
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3.4"
+          bundler-cache: true
+      - name: Brakeman
+        run: bundle exec brakeman --no-pager --exit-on-warn -q
+
   deploy-dev:
-    needs: test
+    needs: [test, lint, security]
     if: github.ref == 'refs/heads/dev'
     runs-on: ubuntu-latest 
     environment: env
@@ -48,7 +70,7 @@ jobs:
         run: docker image prune -f
   
   deploy-prod:
-    needs: test
+    needs: [test, lint, security]
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     environment: env
