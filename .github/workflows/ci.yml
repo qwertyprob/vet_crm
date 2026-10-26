@@ -111,16 +111,29 @@ jobs:
             exit 0
           fi
           body="$(git log --format='- %s' origin/main..HEAD)"
-          existing="$(gh pr list --base main --head dev --state open --json number -q '.[0].number')"
-          if [ -n "${existing}" ]; then
-            number="${existing}"
-            gh pr edit "${number}" --body "${body}"
-          else
-            url="$(gh pr create --base main --head dev --title "Release" --body "${body}")"
-            number="${url##*/}"
-          fi
-          # Title matches GitHub's default merge message, with the real PR number.
-          gh pr edit "${number}" --title "Merge pull request #${number} from ${GITHUB_REPOSITORY_OWNER}/dev"
+
+          sync_pr() {
+            existing="$(gh pr list --base main --head dev --state open --json number -q '.[0].number')" || return 1
+            if [ -n "${existing}" ]; then
+              number="${existing}"
+              gh pr edit "${number}" --body "${body}" || return 1
+            else
+              url="$(gh pr create --base main --head dev --title "Release" --body "${body}")" || return 1
+              number="${url##*/}"
+            fi
+            # Title matches GitHub's default merge message, with the real PR number.
+            gh pr edit "${number}" --title "Merge pull request #${number} from ${GITHUB_REPOSITORY_OWNER}/dev" || return 1
+          }
+
+          # GitHub API can time out (504). Retrying finds the PR if the last attempt created it.
+          for attempt in 1 2 3 4; do
+            if sync_pr; then
+              exit 0
+            fi
+            echo "GitHub API call failed (attempt ${attempt}), retrying" >&2
+            sleep $((attempt * 15))
+          done
+          exit 1
 
   release:
     needs: deploy-prod
