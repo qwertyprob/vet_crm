@@ -1,29 +1,55 @@
-<h2>Sign up</h2>
-
-<%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
-
-  <div class="field">
-    <p><%= f.label :email %></p>
-    <p><%= f.email_field :email, autofocus: true, autocomplete: "email" %></p>
-  </div>
-
-  <div class="field">
-    <p><%= f.label :password %></p>
-    <% if @minimum_password_length %>
-      <p><em>(<%= @minimum_password_length %> characters minimum)</em></p>
+<main class="flex min-h-screen items-center justify-center bg-muted/40 px-4 py-12">
+  <%= render RubyUI::Card.new(class: "w-full max-w-md") do %>
+    <%= render RubyUI::CardHeader.new do %>
+      <%= render RubyUI::CardTitle.new { "Create account" } %>
+      <%= render RubyUI::CardDescription.new { "Start managing your clinic in a few seconds" } %>
     <% end %>
-    <p><%= f.password_field :password, autocomplete: "new-password" %></p>
-  </div>
 
-  <div class="field">
-    <p><%= f.label :password_confirmation %></p>
-    <p><%= f.password_field :password_confirmation, autocomplete: "new-password" %></p>
-  </div>
+    <%= render RubyUI::CardContent.new(class: "space-y-6") do %>
+      <% if resource.errors.any? %>
+        <div class="rounded-md border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          <ul class="list-disc space-y-1 pl-5">
+            <% resource.errors.full_messages.each do |message| %>
+              <li><%= message %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
 
-  <div class="actions">
-    <%= f.submit "Sign up" %>
-  </div>
-<% end %>
+      <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "space-y-6", data: { controller: "submit-alert" } }) do |f| %>
+        <%= render RubyUI::Alert.new(class: "hidden", data: { submit_alert_target: "alert" }) do %>
+          <%= render RubyUI::AlertTitle.new { "Creating your account" } %>
+          <%= render RubyUI::AlertDescription.new { "Please wait..." } %>
+        <% end %>
 
-<%= render "devise/shared/links" %>
+        <div class="flex flex-col gap-2">
+          <%= render RubyUI::FormFieldLabel.new(for: "#{resource_name}_email") { "Email" } %>
+          <%= render RubyUI::Input.new(type: :email, name: "#{resource_name}[email]", id: "#{resource_name}_email", value: resource.email, autofocus: true, autocomplete: "email", placeholder: "you@clinic.com") %>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <%= render RubyUI::FormFieldLabel.new(for: "#{resource_name}_password") { "Password" } %>
+          <%= render RubyUI::Input.new(type: :password, name: "#{resource_name}[password]", id: "#{resource_name}_password", autocomplete: "new-password") %>
+          <% if @minimum_password_length %>
+            <p class="text-sm text-muted-foreground"><%= @minimum_password_length %> characters minimum</p>
+          <% end %>
+        </div>
+
+        <div class="flex flex-col gap-2">
+          <%= render RubyUI::FormFieldLabel.new(for: "#{resource_name}_password_confirmation") { "Password confirmation" } %>
+          <%= render RubyUI::Input.new(type: :password, name: "#{resource_name}[password_confirmation]", id: "#{resource_name}_password_confirmation", autocomplete: "new-password") %>
+        </div>
+
+        <%= render RubyUI::Button.new(
+              type: :submit,
+              class: "w-full",
+              data: { action: "click->submit-alert#notify" }
+            ) { "Sign up" } %>
+      <% end %>
+    <% end %>
+
+    <%= render RubyUI::CardFooter.new(class: "justify-center text-sm") do %>
+      <%= render "devise/shared/links" %>
+    <% end %>
+  <% end %>
+</main>

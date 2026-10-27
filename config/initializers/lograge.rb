@@ -46,7 +46,6 @@ module Lograge
           "#{g}#{data[:duration].round}ms#{r}"
         ]
 
-        parts << "#{g}user=#{data[:user_id]}#{r}" if data[:user_id]
         parts << "#{COLORS[:red]}err=#{data[:error]}#{r}" if data[:error]
 
         parts.join("  ")
@@ -68,7 +67,6 @@ Rails.application.configure do
 
   config.lograge.custom_options = lambda do |event|
     options = {}
-    options[:user_id]    = event.payload[:user_id]          if event.payload[:user_id]
     options[:request_id] = event.payload[:request_id]       if event.payload[:request_id]
     options[:error]      = event.payload[:exception_object]&.message
     options.compact

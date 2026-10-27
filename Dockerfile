@@ -29,18 +29,18 @@ RUN apt-get update -qq && \
 
 COPY Gemfile Gemfile.lock ./
 
-RUN if [ "$RAILS_ENV" = "production" ]; then export BUNDLE_WITHOUT=development; fi && \
+RUN if [ "$RAILS_ENV" = "production" ]; then export BUNDLE_WITHOUT=development:test; fi && \
     bundle install && \
     rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
     bundle exec bootsnap precompile -j 1 --gemfile
 
 COPY . .
 
-RUN if [ "$RAILS_ENV" = "production" ]; then export BUNDLE_WITHOUT=development; fi && \
+RUN if [ "$RAILS_ENV" = "production" ]; then export BUNDLE_WITHOUT=development:test; fi && \
     bundle exec bootsnap precompile -j 1 app/ lib/
 
 RUN if [ "$RAILS_ENV" = "production" ]; then \
-      export BUNDLE_WITHOUT=development && \
+      export BUNDLE_WITHOUT=development:test && \
       SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile; \
     fi
 
@@ -70,7 +70,7 @@ FROM base AS production
 
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_WITHOUT="development:test"
 
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash
